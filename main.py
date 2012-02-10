@@ -12,11 +12,14 @@ import time
 
 asdf = None
 
+def lol():
+    return "lol!"
+
 if __name__ == '__main__':
     #print("lol.")
-    asdf = mumbleConnection.mumbleConnection("some.server.name", "serverpasswordleaveitthereevenifyouhavenone", 1337, "lolbot", "robot_enrichment_center")
+    asdf = mumbleConnection.mumbleConnection("someserver.name", "password", 1337, "lolbot", "robot_enrichment_center")
     asdf.connectToServer()
-	
+    asdf.addChatCallback("wtf", lol)	
     # this infinity loop is there for structural purposes, do not remove it!
-    while True:
+    while asdf.running:
         a = 3 

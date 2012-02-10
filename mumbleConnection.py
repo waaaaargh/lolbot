@@ -3,7 +3,7 @@ Created on Feb 6, 2012
 
 @author: johannes
 '''
-
+        
 import socket
 import ssl
 import platform
@@ -17,7 +17,7 @@ class mumbleConnection(object):
     '''
     classdocs
     '''
-    
+
     host = None
     port = None
     password = None
@@ -26,6 +26,8 @@ class mumbleConnection(object):
     channel = None
     pingTotal = 1   
     running = False
+    textCallbacks = []
+
 
     messageLookupMessage = {Mumble_pb2.Version:0,Mumble_pb2.UDPTunnel:1,Mumble_pb2.Authenticate:2,Mumble_pb2.Ping:3,Mumble_pb2.Reject:4,Mumble_pb2.ServerSync:5,
         Mumble_pb2.ChannelRemove:6,Mumble_pb2.ChannelState:7,Mumble_pb2.UserRemove:8,Mumble_pb2.UserState:9,Mumble_pb2.BanList:10,Mumble_pb2.TextMessage:11,Mumble_pb2.PermissionDenied:12,
@@ -58,7 +60,10 @@ class mumbleConnection(object):
         message=msgClass()
         message.ParseFromString(stringMessage)
         return message
-        
+    
+    def addChatCallback(self, trigger, function):
+        self.textCallbacks.append((trigger, function))        
+    
     def readTotally(self,size):
         message=""
         while len(message)<size:
@@ -159,9 +164,14 @@ class mumbleConnection(object):
     	    
 	    if(msgType == 11):
             	message=self.parseMessage(msgType,stringMessage)
-		print("Text Message from User #" + str(message.actor)+": "+message.message )
-		if(message.message == "lol"):
-		    self.sendTextMessage(time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()))		   
+                for call in self.textCallbacks:
+                    if(call[0] == message.message):
+                        self.sendTextMessage(call[1]()) 
+    
+
+    def closeConnection(self):
+	    self.running = False
+
     def sendPing(self):
         pbMess = Mumble_pb2.Ping()
         pbMess.timestamp=(self.pingTotal*5000000)
